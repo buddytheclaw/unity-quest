@@ -30,6 +30,13 @@ import { NextAction } from '@/components/NextAction'
 
 const STORAGE_KEY = 'unity-quest-progress'
 
+interface Resource {
+  title: string
+  url: string
+  type: 'video' | 'docs' | 'interactive' | 'article' | 'course'
+  duration?: string
+}
+
 interface Task {
   id: string
   text: string
@@ -45,6 +52,7 @@ interface Quest {
   completed: boolean
   week: number
   tasks: Task[]
+  resources: Resource[]
 }
 
 interface SavedProgress {
@@ -68,6 +76,12 @@ const initialQuests: Quest[] = [
       { id: 't2', text: 'Install VS Code + C# extension', done: false },
       { id: 't3', text: 'Create "HelloUnity" project', done: false },
       { id: 't4', text: 'Navigate Scene/Game/Inspector views', done: false },
+    ],
+    resources: [
+      { title: 'Unity Hub Download', url: 'https://unity.com/download', type: 'docs' },
+      { title: 'Code Monkey - Getting Started', url: 'https://www.youtube.com/watch?v=E6A4WvsDeLE', type: 'video', duration: '18min' },
+      { title: 'Unity Essentials Pathway', url: 'https://learn.unity.com/pathway/unity-essentials', type: 'interactive' },
+      { title: 'Brackeys - First Game', url: 'https://www.youtube.com/watch?v=j48LtUkZRjU', type: 'video', duration: '18min' },
     ]
   },
   {
@@ -83,6 +97,13 @@ const initialQuests: Quest[] = [
       { id: 't6', text: 'Properties (get/set) vs TS getters', done: false },
       { id: 't7', text: 'async/await differences', done: false },
       { id: 't8', text: 'Complete C# Yellow Book chapter 1', done: false },
+    ],
+    resources: [
+      { title: 'C# for JS Developers (Microsoft)', url: 'https://docs.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/', type: 'docs' },
+      { title: 'Brackeys C# Basics Playlist', url: 'https://www.youtube.com/playlist?list=PLPV2KyIb3jR4CtEelGPsmPzlvP7ISPYzR', type: 'video', duration: '2h (watch at 2x)' },
+      { title: 'C# Yellow Book (Free PDF)', url: 'http://www.csharpcourse.com/', type: 'docs' },
+      { title: 'Exercism C# Track', url: 'https://exercism.org/tracks/csharp', type: 'interactive' },
+      { title: 'C# Interactive (Try .NET)', url: 'https://try.dot.net/', type: 'interactive' },
     ]
   },
   {
@@ -98,6 +119,12 @@ const initialQuests: Quest[] = [
       { id: 't10', text: 'Write first MonoBehaviour script', done: false },
       { id: 't11', text: 'Understand Start() vs Update()', done: false },
       { id: 't12', text: 'Inspector serialization ([SerializeField])', done: false },
+    ],
+    resources: [
+      { title: 'Catlike Coding - Basics', url: 'https://catlikecoding.com/unity/tutorials/basics/', type: 'interactive' },
+      { title: 'Code Monkey - MonoBehaviour', url: 'https://www.youtube.com/watch?v=9tMvzrqBUP8', type: 'video', duration: '15min' },
+      { title: 'Unity Manual - Scripting', url: 'https://docs.unity3d.com/Manual/scripting.html', type: 'docs' },
+      { title: 'Sebastian Lague - Intro to Game Dev', url: 'https://www.youtube.com/playlist?list=PLFt_AvWsXl0fnA91TcmkRyhhixX9CO3Lw', type: 'video' },
     ]
   },
   {
@@ -113,6 +140,12 @@ const initialQuests: Quest[] = [
       { id: 't14', text: 'Colliders and collision detection', done: false },
       { id: 't15', text: 'Apply forces (AddForce, velocity)', done: false },
       { id: 't16', text: 'FixedUpdate vs Update for physics', done: false },
+    ],
+    resources: [
+      { title: 'Unity Physics Manual', url: 'https://docs.unity3d.com/Manual/PhysicsSection.html', type: 'docs' },
+      { title: 'Catlike Coding - Movement', url: 'https://catlikecoding.com/unity/tutorials/movement/', type: 'interactive' },
+      { title: 'Brackeys - Physics', url: 'https://www.youtube.com/watch?v=dLYTwDQmjdo', type: 'video', duration: '14min' },
+      { title: 'Game Dev Beginner - Rigidbody', url: 'https://gamedevbeginner.com/rigidbody-in-unity-what-you-need-to-know/', type: 'article' },
     ]
   },
   {
@@ -128,6 +161,12 @@ const initialQuests: Quest[] = [
       { id: 't18', text: 'Create Input Actions asset', done: false },
       { id: 't19', text: 'Handle keyboard/gamepad input', done: false },
       { id: 't20', text: 'Move object with input', done: false },
+    ],
+    resources: [
+      { title: 'Unity Input System Docs', url: 'https://docs.unity3d.com/Packages/com.unity.inputsystem@1.0/manual/index.html', type: 'docs' },
+      { title: 'Brackeys - New Input System', url: 'https://www.youtube.com/watch?v=Yjee_e4fICc', type: 'video', duration: '18min' },
+      { title: 'Code Monkey - Input System', url: 'https://www.youtube.com/watch?v=Pzd8NhcRzVo', type: 'video', duration: '20min' },
+      { title: 'Catlike Coding - Player Input', url: 'https://catlikecoding.com/unity/tutorials/movement/sliding-a-sphere/', type: 'interactive' },
     ]
   },
   {
@@ -143,6 +182,12 @@ const initialQuests: Quest[] = [
       { id: 't22', text: 'Implement power input → force', done: false },
       { id: 't23', text: 'Basic steering with lean', done: false },
       { id: 't24', text: 'Speedometer UI (TextMeshPro)', done: false },
+    ],
+    resources: [
+      { title: 'Unity Wheel Collider Tutorial', url: 'https://docs.unity3d.com/Manual/class-WheelCollider.html', type: 'docs' },
+      { title: 'Simple Vehicle Controller', url: 'https://www.youtube.com/watch?v=Z4HA8zJhGEk', type: 'video', duration: '1h' },
+      { title: 'Roll-a-Ball (Build Along)', url: 'https://learn.unity.com/project/roll-a-ball', type: 'interactive' },
+      { title: 'TextMeshPro Tutorial', url: 'https://www.youtube.com/watch?v=gLqpHjYpB0U', type: 'video', duration: '10min' },
     ]
   },
   {
@@ -158,6 +203,12 @@ const initialQuests: Quest[] = [
       { id: 't26', text: 'Detect surface gradient angle', done: false },
       { id: 't27', text: 'Apply gradient resistance/boost', done: false },
       { id: 't28', text: 'Display gradient percentage', done: false },
+    ],
+    resources: [
+      { title: 'Unity Terrain Manual', url: 'https://docs.unity3d.com/Manual/terrain-UsingTerrains.html', type: 'docs' },
+      { title: 'Brackeys - Terrain Tutorial', url: 'https://www.youtube.com/watch?v=MWQv2Bagwgk', type: 'video', duration: '15min' },
+      { title: 'Bicycle Physics (Academic)', url: 'https://bicycle.tudelft.nl/stablebicycle/StableBicyclev34.pdf', type: 'article' },
+      { title: 'Raycasting for Terrain Detection', url: 'https://gamedevbeginner.com/raycasts-in-unity-everything-you-need-to-know/', type: 'article' },
     ]
   },
   {
@@ -173,6 +224,12 @@ const initialQuests: Quest[] = [
       { id: 't30', text: 'Follow camera setup', done: false },
       { id: 't31', text: 'Add particle effects (dust)', done: false },
       { id: 't32', text: 'Audio: bike sounds', done: false },
+    ],
+    resources: [
+      { title: 'Cinemachine Documentation', url: 'https://docs.unity3d.com/Packages/com.unity.cinemachine@2.6/manual/index.html', type: 'docs' },
+      { title: 'Brackeys - Cinemachine', url: 'https://www.youtube.com/watch?v=Gx9gZ9cfrys', type: 'video', duration: '10min' },
+      { title: 'Particle System Tutorial', url: 'https://www.youtube.com/watch?v=FEA1wTMJAR0', type: 'video', duration: '20min' },
+      { title: 'Game Audio Basics', url: 'https://learn.unity.com/tutorial/introduction-to-audio', type: 'interactive' },
     ]
   },
 ]
@@ -187,7 +244,29 @@ function loadProgress(): SavedProgress | null {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (!saved) return null
-    return JSON.parse(saved) as SavedProgress
+    const parsed = JSON.parse(saved) as SavedProgress
+    
+    // Merge saved progress with initialQuests to preserve resources
+    // (resources aren't saved to localStorage)
+    const mergedQuests = initialQuests.map(initial => {
+      const savedQuest = parsed.quests.find(q => q.id === initial.id)
+      if (savedQuest) {
+        return {
+          ...initial,
+          completed: savedQuest.completed,
+          tasks: initial.tasks.map(task => {
+            const savedTask = savedQuest.tasks.find(t => t.id === task.id)
+            return savedTask ? { ...task, done: savedTask.done } : task
+          })
+        }
+      }
+      return initial
+    })
+    
+    return {
+      ...parsed,
+      quests: mergedQuests
+    }
   } catch {
     console.error('Failed to load progress from localStorage')
     return null
@@ -198,7 +277,16 @@ function saveProgress(progress: SavedProgress): void {
   if (typeof window === 'undefined') return
   
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+    // Save without resources (they're static and don't need persisting)
+    const toSave = {
+      ...progress,
+      quests: progress.quests.map(q => ({
+        id: q.id,
+        completed: q.completed,
+        tasks: q.tasks.map(t => ({ id: t.id, done: t.done }))
+      }))
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
   } catch {
     console.error('Failed to save progress to localStorage')
   }

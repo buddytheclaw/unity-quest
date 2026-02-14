@@ -2,6 +2,13 @@
 
 import { useState } from 'react'
 
+interface Resource {
+  title: string
+  url: string
+  type: 'video' | 'docs' | 'interactive' | 'article' | 'course'
+  duration?: string
+}
+
 interface Task {
   id: string
   text: string
@@ -17,11 +24,28 @@ interface Quest {
   completed: boolean
   week: number
   tasks: Task[]
+  resources: Resource[]
 }
 
 interface QuestCardProps {
   quest: Quest
   onToggleTask: (questId: string, taskId: string) => void
+}
+
+const resourceIcons: Record<Resource['type'], string> = {
+  video: '🎬',
+  docs: '📚',
+  interactive: '🎮',
+  article: '📝',
+  course: '🎓',
+}
+
+const resourceColors: Record<Resource['type'], string> = {
+  video: 'text-red-400 hover:text-red-300',
+  docs: 'text-blue-400 hover:text-blue-300',
+  interactive: 'text-neon-green hover:text-green-300',
+  article: 'text-yellow-400 hover:text-yellow-300',
+  course: 'text-purple-400 hover:text-purple-300',
 }
 
 export function QuestCard({ quest, onToggleTask }: QuestCardProps) {
@@ -80,7 +104,9 @@ export function QuestCard({ quest, onToggleTask }: QuestCardProps) {
       {expanded && (
         <div className="px-4 pb-4 border-t border-dark-600 pt-3">
           <p className="text-gray-400 text-sm mb-3">{quest.description}</p>
-          <div className="space-y-2">
+          
+          {/* Tasks */}
+          <div className="space-y-2 mb-4">
             {quest.tasks.map(task => (
               <button
                 key={task.id}
@@ -102,6 +128,37 @@ export function QuestCard({ quest, onToggleTask }: QuestCardProps) {
               </button>
             ))}
           </div>
+          
+          {/* Resources */}
+          {quest.resources && quest.resources.length > 0 && (
+            <div className="border-t border-dark-600 pt-3">
+              <h4 className="text-sm font-medium text-gray-400 mb-2 flex items-center gap-2">
+                📖 Resources
+                <span className="text-xs text-gray-600">
+                  (🎬 video • 🎮 interactive • 📚 docs)
+                </span>
+              </h4>
+              <div className="grid gap-2">
+                {quest.resources.map((resource, idx) => (
+                  <a
+                    key={idx}
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-2 p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors group ${resourceColors[resource.type]}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>{resourceIcons[resource.type]}</span>
+                    <span className="flex-1 text-sm truncate">{resource.title}</span>
+                    {resource.duration && (
+                      <span className="text-xs text-gray-500">{resource.duration}</span>
+                    )}
+                    <span className="text-gray-600 group-hover:text-gray-400 text-xs">↗</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

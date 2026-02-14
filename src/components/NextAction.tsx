@@ -1,5 +1,12 @@
 'use client'
 
+interface Resource {
+  title: string
+  url: string
+  type: 'video' | 'docs' | 'interactive' | 'article' | 'course'
+  duration?: string
+}
+
 interface Task {
   id: string
   text: string
@@ -15,6 +22,7 @@ interface Quest {
   completed: boolean
   week: number
   tasks: Task[]
+  resources: Resource[]
 }
 
 interface NextActionProps {
@@ -22,9 +30,37 @@ interface NextActionProps {
   onToggleTask: (questId: string, taskId: string) => void
 }
 
+const resourceIcons: Record<Resource['type'], string> = {
+  video: '🎬',
+  docs: '📚',
+  interactive: '🎮',
+  article: '📝',
+  course: '🎓',
+}
+
+const resourceBadgeColors: Record<Resource['type'], string> = {
+  video: 'bg-red-500/20 text-red-400',
+  docs: 'bg-blue-500/20 text-blue-400',
+  interactive: 'bg-green-500/20 text-neon-green',
+  article: 'bg-yellow-500/20 text-yellow-400',
+  course: 'bg-purple-500/20 text-purple-400',
+}
+
 export function NextAction({ quest, onToggleTask }: NextActionProps) {
   const nextTask = quest.tasks.find(t => !t.done)
   const completedTasks = quest.tasks.filter(t => t.done).length
+  
+  // Prioritize interactive and video resources
+  const sortedResources = [...(quest.resources || [])].sort((a, b) => {
+    const priority: Record<Resource['type'], number> = {
+      interactive: 0,
+      video: 1,
+      course: 2,
+      article: 3,
+      docs: 4,
+    }
+    return priority[a.type] - priority[b.type]
+  })
   
   return (
     <div className="bg-gradient-to-r from-dark-800 to-dark-700 rounded-2xl p-6 border-2 border-neon-cyan neon-border">
@@ -43,6 +79,35 @@ export function NextAction({ quest, onToggleTask }: NextActionProps) {
           style={{ width: `${(completedTasks / quest.tasks.length) * 100}%` }}
         />
       </div>
+      
+      {/* Resources - prominent placement for learning */}
+      {sortedResources.length > 0 && (
+        <div className="mb-4 p-3 bg-dark-900/50 rounded-xl">
+          <h4 className="text-sm font-medium text-neon-pink mb-2">📖 Start Learning</h4>
+          <div className="flex flex-wrap gap-2">
+            {sortedResources.slice(0, 4).map((resource, idx) => (
+              <a
+                key={idx}
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all hover:scale-105 ${resourceBadgeColors[resource.type]}`}
+              >
+                <span>{resourceIcons[resource.type]}</span>
+                <span className="max-w-[150px] truncate">{resource.title}</span>
+                {resource.duration && (
+                  <span className="text-xs opacity-60">({resource.duration})</span>
+                )}
+              </a>
+            ))}
+          </div>
+          {sortedResources.length > 4 && (
+            <p className="text-xs text-gray-500 mt-2">
+              +{sortedResources.length - 4} more in expanded view
+            </p>
+          )}
+        </div>
+      )}
       
       {/* Current task - THE ONE THING */}
       {nextTask && (
