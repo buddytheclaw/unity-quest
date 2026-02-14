@@ -380,7 +380,7 @@ export default function Home() {
           Unity Quest 🎮
         </h1>
         <p className="text-gray-400">
-          Level up your Unity skills • Start date: March 2nd
+          Level up your Unity skills • No rush - learn at your pace 🎯
         </p>
       </div>
 
