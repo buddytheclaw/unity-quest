@@ -1,13 +1,60 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { QuestCard } from '@/components/QuestCard'
 import { ProgressRing } from '@/components/ProgressRing'
 import { StreakCounter } from '@/components/StreakCounter'
 import { NextAction } from '@/components/NextAction'
 
+/**
+ * TODO: Migrate to Neon/Drizzle for cross-device sync
+ * 
+ * Current: localStorage persistence (works offline, single device)
+ * Future: Neon Postgres + Drizzle ORM
+ * 
+ * Schema design for Neon:
+ * - users: id, created_at
+ * - progress: user_id, quest_id, task_id, completed_at
+ * - streaks: user_id, current_streak, last_activity_date
+ * 
+ * Migration path:
+ * 1. Set up Neon project + connection string
+ * 2. Install: npm install @neondatabase/serverless drizzle-orm
+ * 3. Create schema in src/db/schema.ts
+ * 4. Add API routes for progress sync
+ * 5. Hydrate localStorage on first load, sync on changes
+ * 
+ * @see https://neon.tech/docs/guides/nextjs
+ * @see /root/vault/Engineering/unity-learning-plan.md
+ */
+
+const STORAGE_KEY = 'unity-quest-progress'
+
+interface Task {
+  id: string
+  text: string
+  done: boolean
+}
+
+interface Quest {
+  id: string
+  title: string
+  description: string
+  xp: number
+  estimatedMinutes: number
+  completed: boolean
+  week: number
+  tasks: Task[]
+}
+
+interface SavedProgress {
+  quests: Quest[]
+  streak: number
+  lastActivityDate: string | null
+}
+
 // Learning modules based on the 2-week plan
-const initialQuests = [
+const initialQuests: Quest[] = [
   {
     id: 'week1-day1',
     title: 'Day 1: Environment Setup',
@@ -130,9 +177,60 @@ const initialQuests = [
   },
 ]
 
+function getToday(): string {
+  return new Date().toISOString().split('T')[0]
+}
+
+function loadProgress(): SavedProgress | null {
+  if (typeof window === 'undefined') return null
+  
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (!saved) return null
+    return JSON.parse(saved) as SavedProgress
+  } catch {
+    console.error('Failed to load progress from localStorage')
+    return null
+  }
+}
+
+function saveProgress(progress: SavedProgress): void {
+  if (typeof window === 'undefined') return
+  
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
+  } catch {
+    console.error('Failed to save progress to localStorage')
+  }
+}
+
 export default function Home() {
-  const [quests, setQuests] = useState(initialQuests)
+  const [quests, setQuests] = useState<Quest[]>(initialQuests)
   const [streak, setStreak] = useState(0)
+  const [lastActivityDate, setLastActivityDate] = useState<string | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+  
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = loadProgress()
+    if (saved) {
+      setQuests(saved.quests)
+      setStreak(saved.streak)
+      setLastActivityDate(saved.lastActivityDate)
+    }
+    setIsLoaded(true)
+  }, [])
+  
+  // Save to localStorage whenever state changes (after initial load)
+  useEffect(() => {
+    if (!isLoaded) return
+    
+    saveProgress({
+      quests,
+      streak,
+      lastActivityDate,
+    })
+  }, [quests, streak, lastActivityDate, isLoaded])
   
   const totalXp = quests.reduce((sum, q) => sum + (q.completed ? q.xp : 0), 0)
   const maxXp = quests.reduce((sum, q) => sum + q.xp, 0)
@@ -142,6 +240,24 @@ export default function Home() {
   const nextQuest = quests.find(q => !q.completed)
   
   const toggleTask = (questId: string, taskId: string) => {
+    const today = getToday()
+    
+    // Update streak logic
+    if (lastActivityDate !== today) {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const yesterdayStr = yesterday.toISOString().split('T')[0]
+      
+      if (lastActivityDate === yesterdayStr) {
+        // Continuing streak
+        setStreak(s => s + 1)
+      } else if (lastActivityDate !== today) {
+        // Streak broken or first activity
+        setStreak(1)
+      }
+      setLastActivityDate(today)
+    }
+    
     setQuests(quests.map(quest => {
       if (quest.id !== questId) return quest
       
@@ -157,6 +273,15 @@ export default function Home() {
         completed: allDone,
       }
     }))
+  }
+
+  // Show loading state to prevent hydration mismatch
+  if (!isLoaded) {
+    return (
+      <main className="min-h-screen p-4 md:p-8 flex items-center justify-center">
+        <div className="text-neon-cyan text-2xl animate-pulse">Loading...</div>
+      </main>
+    )
   }
 
   return (
@@ -217,7 +342,8 @@ export default function Home() {
 
       {/* Footer */}
       <div className="max-w-4xl mx-auto mt-12 text-center text-gray-500 text-sm">
-        Built by Buddy 🤖 • Progress syncs to Neon
+        Built by Buddy 🤖 • Progress saved locally
+        {/* TODO: Update to "syncs to Neon" once DB is connected */}
       </div>
     </main>
   )
